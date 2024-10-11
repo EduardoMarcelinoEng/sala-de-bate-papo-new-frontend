@@ -20,9 +20,11 @@ const pageReducer = (state = INITIAL_STATE, { type, payload }) => {
         case 'TOGGLE':
             return { ...state, open: !state.open };
         case 'IS_LOADING':
-            return { ...state, loading: payload };
+            return { ...state, isLoading: payload };
         case 'LOGOUT':
-            return INITIAL_STATE;
+            return Object.assign({}, INITIAL_STATE, {
+                isLoading: false
+            });
         default:
             return state;
     }
