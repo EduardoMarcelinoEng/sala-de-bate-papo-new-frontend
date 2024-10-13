@@ -5,6 +5,7 @@ import userReducer from './userReducer';
 import formReducer from './formReducer';
 import roomReducer from './roomReducer';
 import configReducer from './configReducer';
+import eventReducer from './eventReducer';
 
 export default combineReducers({
     roomState: roomReducer,
@@ -12,5 +13,6 @@ export default combineReducers({
     socketState: socketReducer,
     userState: userReducer,
     formState: formReducer,
-    configState: configReducer
+    configState: configReducer,
+    eventState: eventReducer
 });

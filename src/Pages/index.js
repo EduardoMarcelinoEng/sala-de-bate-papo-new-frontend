@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
     BrowserRouter,
     Routes,
-    Route,
-    useNavigate
+    Route
 } from "react-router-dom";
 import Load from '../Components/Load';
 import Layout from '../Components/Layout';
@@ -30,6 +29,7 @@ export default function Pages(){
                         <Route path="/" element={<Layout />}>
                             <Route path="meu-perfil" element={<MyProfile />} />
                             <Route path="" element={<Chat />} />
+                            <Route path="*" element={<Chat />} />
                         </Route>
                     </Routes>
                 )

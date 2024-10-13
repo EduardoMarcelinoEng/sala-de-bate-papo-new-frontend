@@ -35,6 +35,24 @@ export default {
             return axios.post(`${config.host}/room`, {
                 url
             });
+        },
+        favorite(url){
+            return axios.put(`${config.host}/room/favorite`, {
+                url
+            }, {
+                headers: {
+                    auth: store.getState().userState.user.nickname
+                }
+            });
+        },
+        unfavorite(url){
+            return axios.put(`${config.host}/room/unfavorite`, {
+                url
+            }, {
+                headers: {
+                    auth: store.getState().userState.user.nickname
+                }
+            });
         }
     }
 }

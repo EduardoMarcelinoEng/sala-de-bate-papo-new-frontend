@@ -11,10 +11,11 @@ const roomReducer = (state = INITIAL_STATE, { type, payload }) => {
                 rooms: payload,
                 isLoading: false
             };
-        case 'INCLUDE_ROOM':
+        case 'IN_ROOM':
             return {
                 ...state, 
-                rooms: [...state.rooms, payload]
+                rooms: state.rooms.find(room=>room.url===payload.url) ?
+                    state.rooms : [...state.rooms, payload]
             };
         case 'IS_LOADING_ROOM':
             return {
@@ -24,12 +25,12 @@ const roomReducer = (state = INITIAL_STATE, { type, payload }) => {
         case 'UPDATE_ROOM':
             return {
                 ...state,
-                rooms: state.rooms.map(room=>(room.id === payload.id) ? payload : room)
+                rooms: state.rooms.map(room=>(room.url === payload.url) ? payload : room)
             };
         case 'DELETE_ROOM':
             return {
                 ...state, 
-                rooms: state.rooms.filter(room=>room.id != payload.id)
+                rooms: state.rooms.filter(room=>room.url != payload.url)
             };
         case 'LOGOUT':
             return INITIAL_STATE;

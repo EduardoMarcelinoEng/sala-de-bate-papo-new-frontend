@@ -35,6 +35,11 @@ export default function PreConfig({ children }){
                             payload: user
                         });
 
+                        store.dispatch({
+                            type: "LOAD_ROOM",
+                            payload: user.rooms
+                        });
+
                         await http.room.findOne(window.location.pathname)
                             .then(async result=>{
                                 let room = result.data;
@@ -97,7 +102,7 @@ export default function PreConfig({ children }){
                 type: "IS_LOADING",
                 payload: false
             }));
-    }, [window.location.pathname]);
+    }, []);
 
     return (children);
 }

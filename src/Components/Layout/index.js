@@ -11,7 +11,7 @@ import {
     faUser
 } from '@fortawesome/free-solid-svg-icons';
 import { Navbar, Image, Nav, Button, Card } from 'react-bootstrap';
-import { http } from "../../services";
+import { http, websocket } from "../../services";
 import { useLocation, useParams, useSearchParams } from "react-router-dom";
 
 import {
@@ -58,15 +58,16 @@ export default function Layout(){
 
     const [active, setActive] = useState(false);
     const { user, lastRoomSelected } = useSelector(state=>state.userState);
+    const { rooms } = useSelector(state=>state.roomState);
+    const { socket } = useSelector(state=>state.socketState);
     const [isLogged, setIsLogged] = useState(Boolean(user));
     const [registerFinished, setRegisterFinished] = useState(true);
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
+    const { urlsUnavailable } = useSelector(state=>state.configState.config);
 
     const dispatch = useDispatch();
-
-    //const isOpen = useSelector(state=>state.notificationState.open);
 
     const logout = ()=>{
         dispatch({type: 'LOGOUT'});
@@ -74,6 +75,90 @@ export default function Layout(){
             navigate('/login');
         }, 500);
     }
+
+    useEffect(()=>{
+        dispatch({type: 'CONNECT_SOCKET', payload: websocket.connection.connect()});
+    }, []);
+
+    useEffect(()=>{
+        if(socket && !urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname))){
+            socket.removeAllListeners();
+
+            socket.emit('room:in', window.location.pathname, data=>{
+                dispatch({
+                    type: "IN_ROOM",
+                    payload: {
+                        url: window.location.pathname
+                    }
+                });
+
+                dispatch({
+                    type: "SET_LAST_ROOM_SELECTED_USER",
+                    payload: data
+                });
+
+                dispatch({
+                    type: "LOAD_EVENT",
+                    payload: [
+                        ...data.Messages.map(message=>({
+                            type: "NEW_MESSAGE",
+                            user: message.User,
+                            message: {
+                                text: message.text,
+                                datetime: message.createdAt
+                            },
+                            roomURL: window.location.pathname
+                        })),
+                        {
+                            type: "USER_JOIN_ROOM",
+                            user,
+                            roomURL: data.url
+                        }
+                    ]
+                });
+            });
+
+            socket.on('room:user:entered', data=>{
+                if(data.url === window.location.pathname){
+                    dispatch({
+                        type: "NEW_EVENT",
+                        payload: {
+                            type: "USER_JOIN_ROOM",
+                            user: data.user,
+                            roomURL: data.url
+                        }
+                    });
+                }
+            });
+
+            socket.on('room:user:leave', data=>{
+                if(data.url === window.location.pathname){
+                    dispatch({
+                        type: "NEW_EVENT",
+                        payload: {
+                            type: "USER_LEAVE_ROOM",
+                            user: data.user,
+                            roomURL: data.url
+                        }
+                    });
+                }
+            });
+
+            socket.on('message:new', data=>{
+                if(data.roomURL === window.location.pathname){
+                    dispatch({
+                        type: "NEW_EVENT",
+                        payload: {
+                            type: "NEW_MESSAGE",
+                            user: data.user,
+                            message: data.message,
+                            roomURL: data.url
+                        }
+                    });
+                }
+            });
+        }
+    }, [socket, window.location.pathname]);
 
     useEffect(()=>{
         setIsLogged(Boolean(user));
