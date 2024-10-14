@@ -179,6 +179,21 @@ const WrapperLayout = styled.div`
             display: flex;
             justify-content: center;
 
+            a {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                .icon.alert {
+                    padding: 0;
+                    margin: 0 0 0 0.7rem;
+
+                    svg {
+                        color: orange;
+                    }
+                }
+            }
+
             a,
             .btn-link {
                 margin: 0 20px;

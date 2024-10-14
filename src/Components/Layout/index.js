@@ -25,7 +25,7 @@ import utils from "../../utils";
 
 function HeaderResponsive({ logout }){
     const dispatch = useDispatch();
-    const { isLogged, lastRoomSelected, nickname } = useSelector(state=>state.userState);
+    const { isLogged, lastRoomSelected, nickname, registerFinished } = useSelector(state=>state.userState);
     const location = useLocation();
 
     return (
@@ -45,7 +45,16 @@ function HeaderResponsive({ logout }){
                     {
                         isLogged ? (
                             <Navbar>
-                                <Link to={ "/meu-perfil" }>Meu perfil</Link>
+                                <Link to={ "/meu-perfil" }>
+                                    <span>Meu perfil</span>
+                                    {
+                                        registerFinished ? null : (
+                                            <div className="icon alert">
+                                                <FontAwesomeIcon icon={faCircleExclamation} />
+                                            </div>
+                                        )
+                                    }
+                                </Link>
                             </Navbar>
                         ) : null
                     }             
