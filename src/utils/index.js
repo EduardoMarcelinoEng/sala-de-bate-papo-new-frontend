@@ -2,6 +2,9 @@ import { NotificationManager } from 'react-notifications';
 import store from '../store';
 
 export default {
+    pageCurrentIsChat(urlsUnavailable){
+        return !urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname));
+    },
     validateRoomURL(str){
         if(typeof str !== "string") return false;
         if(/\-\//.test(str)) return false;

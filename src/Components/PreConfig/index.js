@@ -12,7 +12,7 @@ export default function PreConfig({ children }){
         
         const searchParams = new URLSearchParams(window.location.search);
 
-        if(!urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname))){
+        if(utils.pageCurrentIsChat(urlsUnavailable)){
             const nickname = searchParams.get("nickname") || userState.user?.nickname || userState.nickname;
 
             if(nickname){

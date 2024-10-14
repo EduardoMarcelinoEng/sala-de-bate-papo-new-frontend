@@ -21,8 +21,9 @@ import {
 } from "react-router-dom";
 
 import { useSelector, useDispatch } from 'react-redux';
+import utils from "../../utils";
 
-function HeaderResponsive(){
+function HeaderResponsive({ logout }){
     const dispatch = useDispatch();
     const { isLogged, lastRoomSelected, nickname } = useSelector(state=>state.userState);
     const location = useLocation();
@@ -51,7 +52,7 @@ function HeaderResponsive(){
                     <Navbar>
                         {
                             isLogged ? (
-                                <Button onClick={()=>dispatch({type: 'LOGOUT'})} variant='link'>Sair</Button>
+                                <Button onClick={logout} variant='link'>Sair</Button>
                             ) : (
                                 <Link to={`/login`}>
                                     <li className={ ("/login" === location.pathname ? "active" : "") }>
@@ -87,6 +88,7 @@ export default function Layout(){
     }, []);
 
     const initSocket = ()=>{
+
         socket.removeAllListeners();
 
         dispatch({
@@ -175,18 +177,6 @@ export default function Layout(){
             }
         });
 
-        socket.on('connect', function(){
-
-            socket.removeAllListeners();
-
-            dispatch({
-                type: "SET_IS_CONNECTED_SOCKET",
-                payload: true
-            });
-
-            initSocket();
-        });
-
         socket.on('disconnect', function(){
 
             dispatch({
@@ -198,15 +188,9 @@ export default function Layout(){
     }
 
     useEffect(()=>{
-        if(socket && !urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname))){
+        if(socket && utils.pageCurrentIsChat(urlsUnavailable)){
+            socket?.removeAllListeners();
             initSocket();
-            
-            socket.on('connect', function(){
-                dispatch({
-                    type: "SET_IS_CONNECTED_SOCKET",
-                    payload: true
-                });
-            });
         }
     }, [socket, window.location.pathname]);
 
@@ -220,7 +204,7 @@ export default function Layout(){
 
     return (
         <WrapperLayout className={ (active ? "active" : "") }>
-            <HeaderResponsive active={ active } />
+            <HeaderResponsive logout={logout} />
             <div className="navigation">
                 <ul>
                     <li className="logo">
