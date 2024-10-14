@@ -1,6 +1,6 @@
 const INITIAL_STATE = {
     socket: null,
-    isConnected: false
+    isConnected: true
 }
 
 const socketReducer = (state = INITIAL_STATE, { type, payload }) => {
