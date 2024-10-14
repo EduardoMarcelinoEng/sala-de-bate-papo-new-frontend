@@ -13,6 +13,7 @@ import MyProfile from './MyProfile';
 import { useDispatch, useSelector } from 'react-redux';
 import PreConfig from "../Components/PreConfig";
 import utils from '../utils';
+import { websocket } from '../services';
 
 function DisconnectSocketIfNotChat({ children }){
 
@@ -20,6 +21,20 @@ function DisconnectSocketIfNotChat({ children }){
     const { urlsUnavailable } = useSelector(state=>state.configState.config);
     const location = useLocation();
     const dispatch = useDispatch();
+
+    useEffect(()=>{
+        if(socket && !utils.pageCurrentIsChat(urlsUnavailable)){
+            socket.disconnect();
+            dispatch({
+                type: "CONNECT_SOCKET",
+                payload: null
+            });
+
+            return;
+        }
+
+        dispatch({type: 'CONNECT_SOCKET', payload: websocket.connection.connect()});
+    }, [location.pathname]);
 
     return (
         children
