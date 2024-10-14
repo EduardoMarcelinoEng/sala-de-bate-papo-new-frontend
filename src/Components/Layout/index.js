@@ -177,6 +177,15 @@ export default function Layout(){
             }
         });
 
+        socket.on('connect', function(){
+
+            dispatch({
+                type: "SET_IS_CONNECTED_SOCKET",
+                payload: true
+            });
+
+        });
+
         socket.on('disconnect', function(){
 
             dispatch({
