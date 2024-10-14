@@ -194,13 +194,25 @@ export default function Chat(){
 
     const sendMessage = () => {
 
+        if(!message) return;
+        
         setIsDisabled(true);
 
         socket.emit("chat:send", {
             text: message, url: window.location.pathname
         }, data=>{
-            setMessage("");
             setIsDisabled(false);
+
+            if(data?.isError){
+                utils.createNotification({
+                    type: 'error',
+                    title: 'Falha ao enviar mensagem',
+                    message: data?.message
+                });
+
+                return;
+            }
+            setMessage("");
             toBottomScroll();
         });
     }

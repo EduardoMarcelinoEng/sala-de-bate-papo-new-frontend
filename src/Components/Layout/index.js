@@ -86,94 +86,104 @@ export default function Layout(){
         dispatch({type: 'CONNECT_SOCKET', payload: websocket.connection.connect()});
     }, []);
 
-    useEffect(()=>{
-        if(socket && !urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname))){
-            socket.removeAllListeners();
+    const initSocket = ()=>{
+        socket.removeAllListeners();
+
+        dispatch({
+            type: "IS_LOADING_IN_ROOM",
+            payload: true
+        });
+
+        socket.emit('room:in', window.location.pathname, data=>{
+            dispatch({
+                type: "IN_ROOM",
+                payload: {
+                    url: window.location.pathname
+                }
+            });
+
+            dispatch({
+                type: "SET_LAST_ROOM_SELECTED_USER",
+                payload: data
+            });
+
+            dispatch({
+                type: "LOAD_EVENT",
+                payload: [
+                    ...data.Messages.map(message=>({
+                        type: "NEW_MESSAGE",
+                        user: message.User,
+                        message: {
+                            text: message.text,
+                            datetime: message.createdAt
+                        },
+                        roomURL: window.location.pathname
+                    })),
+                    {
+                        type: "USER_JOIN_ROOM",
+                        user: user || {
+                            nickname
+                        },
+                        roomURL: data.url
+                    }
+                ]
+            });
 
             dispatch({
                 type: "IS_LOADING_IN_ROOM",
-                payload: true
+                payload: false
             });
+        });
 
-            socket.emit('room:in', window.location.pathname, data=>{
+        socket.on('room:user:entered', data=>{
+            if(data.url === window.location.pathname){
                 dispatch({
-                    type: "IN_ROOM",
+                    type: "NEW_EVENT",
                     payload: {
-                        url: window.location.pathname
+                        type: "USER_JOIN_ROOM",
+                        user: data.user,
+                        roomURL: data.url
                     }
                 });
+            }
+        });
 
+        socket.on('room:user:leave', data=>{
+            if(data.url === window.location.pathname){
                 dispatch({
-                    type: "SET_LAST_ROOM_SELECTED_USER",
-                    payload: data
+                    type: "NEW_EVENT",
+                    payload: {
+                        type: "USER_LEAVE_ROOM",
+                        user: data.user,
+                        roomURL: data.url
+                    }
                 });
+            }
+        });
 
+        socket.on('message:new', data=>{
+            if(data.roomURL === window.location.pathname){
                 dispatch({
-                    type: "LOAD_EVENT",
-                    payload: [
-                        ...data.Messages.map(message=>({
-                            type: "NEW_MESSAGE",
-                            user: message.User,
-                            message: {
-                                text: message.text,
-                                datetime: message.createdAt
-                            },
-                            roomURL: window.location.pathname
-                        })),
-                        {
-                            type: "USER_JOIN_ROOM",
-                            user: user || {
-                                nickname
-                            },
-                            roomURL: data.url
-                        }
-                    ]
+                    type: "NEW_EVENT",
+                    payload: {
+                        type: "NEW_MESSAGE",
+                        user: data.user,
+                        message: data.message,
+                        roomURL: data.url
+                    }
                 });
+            }
+        });
 
-                dispatch({
-                    type: "IS_LOADING_IN_ROOM",
-                    payload: false
-                });
-            });
+        socket.on('connect', function(){
+            initSocket();
+        });
+    }
 
-            socket.on('room:user:entered', data=>{
-                if(data.url === window.location.pathname){
-                    dispatch({
-                        type: "NEW_EVENT",
-                        payload: {
-                            type: "USER_JOIN_ROOM",
-                            user: data.user,
-                            roomURL: data.url
-                        }
-                    });
-                }
-            });
-
-            socket.on('room:user:leave', data=>{
-                if(data.url === window.location.pathname){
-                    dispatch({
-                        type: "NEW_EVENT",
-                        payload: {
-                            type: "USER_LEAVE_ROOM",
-                            user: data.user,
-                            roomURL: data.url
-                        }
-                    });
-                }
-            });
-
-            socket.on('message:new', data=>{
-                if(data.roomURL === window.location.pathname){
-                    dispatch({
-                        type: "NEW_EVENT",
-                        payload: {
-                            type: "NEW_MESSAGE",
-                            user: data.user,
-                            message: data.message,
-                            roomURL: data.url
-                        }
-                    });
-                }
+    useEffect(()=>{
+        if(socket && !urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname))){
+            socket.on('connect', function(){
+                initSocket();
             });
         }
     }, [socket, window.location.pathname]);
