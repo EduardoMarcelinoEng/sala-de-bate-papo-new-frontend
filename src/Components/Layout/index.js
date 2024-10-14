@@ -71,7 +71,7 @@ export default function Layout(){
 
     const [active, setActive] = useState(false);
     const { user, lastRoomSelected, nickname, registerFinished, isLogged } = useSelector(state=>state.userState);
-    const { socket } = useSelector(state=>state.socketState);
+    const { socket, isConnected } = useSelector(state=>state.socketState);
     const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
     const { urlsUnavailable } = useSelector(state=>state.configState.config);
@@ -176,7 +176,24 @@ export default function Layout(){
         });
 
         socket.on('connect', function(){
+
+            socket.removeAllListeners();
+
+            dispatch({
+                type: "SET_IS_CONNECTED_SOCKET",
+                payload: true
+            });
+
             initSocket();
+        });
+
+        socket.on('disconnect', function(){
+
+            dispatch({
+                type: "SET_IS_CONNECTED_SOCKET",
+                payload: false
+            });
+
         });
     }
 
@@ -184,6 +201,11 @@ export default function Layout(){
         if(socket && !urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname))){
             socket.on('connect', function(){
                 initSocket();
+
+                dispatch({
+                    type: "SET_IS_CONNECTED_SOCKET",
+                    payload: true
+                });
             });
         }
     }, [socket, window.location.pathname]);
@@ -265,12 +287,21 @@ export default function Layout(){
                 </header>
                 <div>
                     {
-                        isLogged ? (
-                            registerFinished ? null : (
+                        isConnected ? (
+                            isLogged ? (
+                                registerFinished ? null : (
+                                    <Card className="warning-message">
+                                        <Card.Body>
+                                            <FontAwesomeIcon className="warning" icon={faCircleExclamation} />
+                                            <span>Para enviar mensagem pelo chat complete o seu cadastro.</span>
+                                        </Card.Body>
+                                    </Card>
+                                )
+                            ) : (
                                 <Card className="warning-message">
                                     <Card.Body>
                                         <FontAwesomeIcon className="warning" icon={faCircleExclamation} />
-                                        <span>Para enviar mensagem pelo chat complete o seu cadastro.</span>
+                                        <span>Para enviar mensagem pelo chat faça login.</span>
                                     </Card.Body>
                                 </Card>
                             )
@@ -278,7 +309,7 @@ export default function Layout(){
                             <Card className="warning-message">
                                 <Card.Body>
                                     <FontAwesomeIcon className="warning" icon={faCircleExclamation} />
-                                    <span>Para enviar mensagem pelo chat faça login.</span>
+                                    <span>Você perdeu conexão com o servidor. Aguarde alguns instantes.</span>
                                 </Card.Body>
                             </Card>
                         )

@@ -159,11 +159,11 @@ function DateComponent({ date }){
 export default function Chat(){
 
     const navigate = useNavigate();
-    const socket = useSelector(state=>state.socketState.socket);
+    const {  socket, isConnected } = useSelector(state=>state.socketState);
     const { events } = useSelector(state=>state.eventState);
     const [isDisabled, setIsDisabled] = useState(false);
     const [tab, setTab] = useState("all");
-    const { nickname, registerFinished, isLogged } = useSelector(state=>state.userState);
+    const { nickname, registerFinished } = useSelector(state=>state.userState);
     const { rooms, isLoadingInRoom } = useSelector(state=>state.roomState);
     const [btnEmoticonHidden, setBtnEmoticonHidden] = useState(true);
     const [message, setMessage] = useState("");
@@ -195,7 +195,7 @@ export default function Chat(){
     const sendMessage = () => {
 
         if(!message) return;
-        
+
         setIsDisabled(true);
 
         socket.emit("chat:send", {
@@ -276,7 +276,7 @@ export default function Chat(){
                     <div className='send-message'>
                         <div className={`container-emoticon btn-emoticon${ btnEmoticonHidden ? " hidden" : "" }`}>
                             <button
-                                disabled={ !registerFinished || isDisabled }
+                                disabled={ !registerFinished || isDisabled || !isConnected }
                                 onClick={()=>setBtnEmoticonHidden(!btnEmoticonHidden)}
                                 onBlur={e=>{
                                     if(!e.relatedTarget?.classList.contains("epr-emoji")){
@@ -300,7 +300,7 @@ export default function Chat(){
                         <Form.Control
                             className="shadow-none"
                             ref={ messageEl }
-                            disabled={ !registerFinished || isDisabled }
+                            disabled={ !registerFinished || isDisabled || !isConnected }
                             type="text"
                             placeholder="Digite uma mensagem"
                             value={message}
@@ -311,7 +311,7 @@ export default function Chat(){
                                 }
                             }}
                         />
-                        <Button disabled={ !registerFinished || isDisabled } onClick={sendMessage}>
+                        <Button disabled={ !registerFinished || isDisabled || !isConnected } onClick={sendMessage}>
                             <FontAwesomeIcon
                                 icon={faPaperPlane}
                             />
