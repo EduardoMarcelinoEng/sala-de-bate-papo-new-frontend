@@ -199,9 +199,9 @@ export default function Layout(){
 
     useEffect(()=>{
         if(socket && !urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname))){
+            initSocket();
+            
             socket.on('connect', function(){
-                initSocket();
-
                 dispatch({
                     type: "SET_IS_CONNECTED_SOCKET",
                     payload: true
