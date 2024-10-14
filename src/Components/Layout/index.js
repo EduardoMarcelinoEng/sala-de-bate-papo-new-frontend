@@ -138,6 +138,7 @@ export default function Layout(){
         });
 
         socket.on('room:user:entered', data=>{
+            if(data.socketId !== socket.id && data.user.nickname === nickname) return;
             if(data.url === window.location.pathname){
                 dispatch({
                     type: "NEW_EVENT",
@@ -151,6 +152,7 @@ export default function Layout(){
         });
 
         socket.on('room:user:leave', data=>{
+            if(data.socketId !== socket.id && data.user.nickname === nickname) return;
             if(data.url === window.location.pathname){
                 dispatch({
                     type: "NEW_EVENT",
