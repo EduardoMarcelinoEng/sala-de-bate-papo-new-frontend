@@ -5,17 +5,47 @@ import logo from "../../files/logo.png";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import utils from "../../utils";
+import { http } from "../../services";
 
 export default function Login(){
 
     const [nickname, setNickname] = useState("");
-    const { user, lastRoomSelected } = useSelector(state=>state.userState);
+    const userState = useSelector(state=>state.userState);
     const [roomName, setRoomName] = useState("/");
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [isLogged, setIsLogged] = useState(Boolean(user));
 
-    const goRoom = ()=>{
+    const login = async ()=>{
+        await http.user.findOne(nickname)
+            .then(async resultFindUser=>{
+                let user = resultFindUser.data;
+
+                if(!user){
+                    await http.user.create(nickname)
+                        .then(resultCreateUser=>user = resultCreateUser.data)
+                        .catch(error=>utils.createNotification({
+                            type: 'error',
+                            title: 'Falha ao criar usuário',
+                            message: error.response.data
+                        }));
+                }
+
+                dispatch({
+                    type: "LOAD_USER",
+                    payload: user
+                });
+
+                dispatch({
+                    type: "LOAD_ROOM",
+                    payload: user.rooms
+                });
+            })
+            .catch(error=>utils.createNotification({
+                type: 'error',
+                title: 'Falha ao buscar usuário',
+                message: error.response.data
+            }));
+
         if(!utils.validateRoomURL(roomName)){
             return utils.createNotification({
                 type: 'error',
@@ -29,14 +59,10 @@ export default function Login(){
         navigate(`${roomName}?nickname=${nickname}`);
     };
 
-    useState(()=>{
-        setIsLogged(Boolean(user));
-    }, [user]);
-
     return (
         <WrapperLogin className="page">
             {
-                isLogged ? <Navigate replace to={ `${lastRoomSelected?.url}?nickname=${user?.nickname}` } /> : false
+                useState.isLogged ? <Navigate replace to={ `${userState.lastRoomSelected?.url}?nickname=${userState.nickname}` } /> : null
             }
             <Form>
                 <Image draggable={false} src={logo} />
@@ -75,7 +101,7 @@ export default function Login(){
                     disabled={!(nickname && roomName)}
                     className='mb-1'
                     variant="primary"
-                    onClick={goRoom}
+                    onClick={login}
                 >
                     Entrar
                 </Button>

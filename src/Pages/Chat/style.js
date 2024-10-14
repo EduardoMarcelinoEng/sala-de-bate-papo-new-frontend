@@ -137,12 +137,19 @@ const WrapperChat = styled.div`
             .list-messages {
                 overflow-y: auto;
 
-                    .info {
-                        text-align: center;
-                        font-size: 1.3rem;
-                        padding: 0.25rem;
-                        margin: 0;
-                    }
+                .info {
+                    text-align: center;
+                    font-size: 1.3rem;
+                    padding: 0.25rem;
+                    margin: 0;
+                }
+
+                &.loading {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100%;
+                }
             }
 
             .send-message {

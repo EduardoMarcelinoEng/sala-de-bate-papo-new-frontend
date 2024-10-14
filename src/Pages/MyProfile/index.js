@@ -6,16 +6,18 @@ import { faCircleExclamation } from "@fortawesome/free-solid-svg-icons";
 import { useDispatch, useSelector } from "react-redux";
 import http from "../../services/http";
 import utils from "../../utils";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export default function MyProfile(){
 
-    const { user } = useSelector(state=>state.userState);
+    const { user, isLogged } = useSelector(state=>state.userState);
     const dispatch = useDispatch();
     const [name, setName] = useState(user?.name || "");
     const [email, setEmail] = useState(user?.email || "");
     const [dateOfBirth, setDateOfBirth] = useState(user?.dateOfBirth || "");
     const [hasChanges, setHasChanges] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
 
     const cancel = ()=>{
         setName(user?.name || "");
@@ -52,6 +54,15 @@ export default function MyProfile(){
         
         return setHasChanges(false);
     }, [name, email, dateOfBirth, user]);
+
+    useEffect(()=>{
+        if(!isLogged){
+            dispatch({type: 'LOGOUT'});
+            setTimeout(()=>{
+                navigate("/login");
+            }, 0);
+        }
+    }, [isLogged]);
 
     return (
         <WrapperMyProfile className="page">

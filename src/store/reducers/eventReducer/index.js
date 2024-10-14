@@ -15,8 +15,6 @@ const eventReducer = (state = INITIAL_STATE, { type, payload }) => {
                 ...state, 
                 events: [...state.events, payload]
             };
-        case 'LOGOUT':
-            return INITIAL_STATE;
         default:
             return state;
     }

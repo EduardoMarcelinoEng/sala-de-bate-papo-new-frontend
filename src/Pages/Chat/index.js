@@ -13,7 +13,7 @@ import moment from "moment";
 function ChatRow({ room, selectChat }){
 
     const dispatch = useDispatch();
-    const { lastRoomSelected } = useSelector(state=>state.userState);
+    const { lastRoomSelected, isLogged } = useSelector(state=>state.userState);
     const getClassName = ()=>{
         return [
             lastRoomSelected.url === room.url ? "active" : "",
@@ -69,13 +69,15 @@ function ChatRow({ room, selectChat }){
                 isLoadingControlActions ? (
                     <Spinner size="sm" border="animation" />
                 ) : (
-                    <div className="actions">
-                        <Button title="Favoritar" onClick={()=>{
-                            room.isFavorite ? toUnfavorite() : toFavorite();
-                        }}>
-                            <FontAwesomeIcon icon={faStar} />
-                        </Button>
-                    </div>
+                    isLogged ? (
+                        <div className="actions">
+                            <Button title="Favoritar" onClick={()=>{
+                                room.isFavorite ? toUnfavorite() : toFavorite();
+                            }}>
+                                <FontAwesomeIcon icon={faStar} />
+                            </Button>
+                        </div>
+                    ) : null
                 )
             }
         </li>
@@ -84,13 +86,13 @@ function ChatRow({ room, selectChat }){
 
 function Message({ event }){
 
-    const { user } = useSelector(state=>state.userState);
+    const { nickname } = useSelector(state=>state.userState);
 
     return (
-        <WrapperMessage className={ event.user.nickname === user.nickname ? "my-message" : ""}>
+        <WrapperMessage className={ event.user.nickname === nickname ? "my-message" : ""}>
             <div className="wrapper">
                 {
-                    event.user.nickname === user.nickname ? null : (
+                    event.user.nickname === nickname ? null : (
                         <p className="name">{ event.user.name?.replace(/(\w+(\s\w+)?)(\s*\w*)*/, "$1") || event.user.nickname }</p>
                     )
                 }
@@ -103,12 +105,12 @@ function Message({ event }){
 
 function UserJoinRoom({ event }){
 
-    const { user } = useSelector(state=>state.userState);
+    const { nickname } = useSelector(state=>state.userState);
 
     return (
         <WrapperUserRoom>
             <h3 className="info">{ 
-                event.user.nickname === user?.nickname ?
+                event.user.nickname === nickname ?
                     "Você entrou na sala" :
                     `${ event.user.name?.replace(/(\w+(\s\w+)?)(\s*\w*)*/, "$1") || event.user.nickname } entrou na sala`
             }</h3>
@@ -118,12 +120,12 @@ function UserJoinRoom({ event }){
 
 function UserLeaveRoom({ event }){
 
-    const { user } = useSelector(state=>state.userState);
+    const { user, nickname } = useSelector(state=>state.userState);
 
     return (
         <WrapperUserRoom>
             <h3 className="info">{ 
-                event.user.nickname === user?.nickname ?
+                event.user.nickname === nickname ?
                     "Você saiu da sala" :
                     `${ event.user.name?.replace(/(\w+(\s\w+)?)(\s*\w*)*/, "$1") || event.user.nickname } saiu da sala`
             }</h3>
@@ -161,15 +163,14 @@ export default function Chat(){
     const { events } = useSelector(state=>state.eventState);
     const [isDisabled, setIsDisabled] = useState(false);
     const [tab, setTab] = useState("all");
-    const { user } = useSelector(state=>state.userState);
-    const { rooms } = useSelector(state=>state.roomState);
-    const [registerFinished, setRegisterFinished] = useState(true);
+    const { nickname, registerFinished, isLogged } = useSelector(state=>state.userState);
+    const { rooms, isLoadingInRoom } = useSelector(state=>state.roomState);
     const [btnEmoticonHidden, setBtnEmoticonHidden] = useState(true);
     const [message, setMessage] = useState("");
     const messageEl = useRef(null);
     const listMessageRef = useRef();
     const selectChat = url => {
-        navigate(`${url}?nickname=${user.nickname}`);
+        navigate(`${url}?nickname=${nickname}`);
     }
 
     const toBottomScroll = () => {
@@ -187,6 +188,10 @@ export default function Chat(){
         }, 0);
     }, [events]);
 
+    useEffect(()=>{
+        if(!isLoadingInRoom) toBottomScroll();
+    }, [isLoadingInRoom]);
+
     const sendMessage = () => {
 
         setIsDisabled(true);
@@ -199,10 +204,6 @@ export default function Chat(){
             toBottomScroll();
         });
     }
-
-    useEffect(()=>{
-        setRegisterFinished(user?.name && user?.email && user?.nickname && user?.dateOfBirth);
-    }, [user]);
 
     return (
         <WrapperChat>
@@ -230,32 +231,34 @@ export default function Chat(){
                     </Card>
                 </div>
                 <div className="messages">
-                    <div className="list-messages" ref={listMessageRef}>
+                    <div className={`list-messages${isLoadingInRoom ? " loading" : ""}`} ref={listMessageRef}>
                         {
-                            events.reduce((acc, event)=>{
-                                let components = acc[0];
-                                let date = acc[1];
-
-                                switch(event.type){
-                                    case "USER_JOIN_ROOM":
-                                        components.push(<UserJoinRoom event={event} />);
-                                    break;
-                                    case "USER_LEAVE_ROOM":
-                                        components.push(<UserLeaveRoom event={event} />);
-                                    break;
-                                    case "NEW_MESSAGE":
-                                        let datetime = moment(event.message.datetime).format("YYYY-MM-DD");
-
-                                        if(datetime !== date){
-                                            date = datetime;
-                                            components.push(<DateComponent date={date} />);
-                                        }
-                                        components.push(<Message event={event} />);
-                                    break;
-                                }
-
-                                return [components, date];
-                            }, [[], null])[0]
+                            isLoadingInRoom ? (<Spinner border="animation" />) : (
+                                events.reduce((acc, event)=>{
+                                    let components = acc[0];
+                                    let date = acc[1];
+    
+                                    switch(event.type){
+                                        case "USER_JOIN_ROOM":
+                                            components.push(<UserJoinRoom event={event} />);
+                                        break;
+                                        case "USER_LEAVE_ROOM":
+                                            components.push(<UserLeaveRoom event={event} />);
+                                        break;
+                                        case "NEW_MESSAGE":
+                                            let datetime = moment(event.message.datetime).format("YYYY-MM-DD");
+    
+                                            if(datetime !== date){
+                                                date = datetime;
+                                                components.push(<DateComponent date={date} />);
+                                            }
+                                            components.push(<Message event={event} />);
+                                        break;
+                                    }
+    
+                                    return [components, date];
+                                }, [[], null])[0]
+                            )
                         }
                     </div>
                     <div className='send-message'>

@@ -8,7 +8,7 @@ export default {
             return socketIOClient(config.host, {
                 reconnectionDelayMax: 10000,
                 auth: {
-                    nickname: store.getState().userState.user.nickname
+                    nickname: store.getState().userState.nickname
                 }
             });
         }

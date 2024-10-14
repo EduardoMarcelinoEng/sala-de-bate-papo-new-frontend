@@ -4,12 +4,12 @@ import { save, load } from "redux-localstorage-simple";
 
 const createStoreWithMiddleware 
     = applyMiddleware(
-        save({ states: ["userState"] })
+        save({ states: ["userState", "roomState"] })
     )(createStore);
 
 const store = createStoreWithMiddleware(
     reducers,    
-    load({ states: ["userState"] })
+    load({ states: ["userState", "roomState"] })
 );
 
 export default store;

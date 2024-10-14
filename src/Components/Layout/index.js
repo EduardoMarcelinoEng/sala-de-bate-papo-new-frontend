@@ -8,6 +8,7 @@ import {
     faCircleExclamation,
     faMessage,
     faRightFromBracket,
+    faRightToBracket,
     faUser
 } from '@fortawesome/free-solid-svg-icons';
 import { Navbar, Image, Nav, Button, Card } from 'react-bootstrap';
@@ -57,12 +58,8 @@ function HeaderResponsive(){
 export default function Layout(){
 
     const [active, setActive] = useState(false);
-    const { user, lastRoomSelected } = useSelector(state=>state.userState);
-    const { rooms } = useSelector(state=>state.roomState);
+    const { user, lastRoomSelected, nickname, registerFinished, isLogged } = useSelector(state=>state.userState);
     const { socket } = useSelector(state=>state.socketState);
-    const [isLogged, setIsLogged] = useState(Boolean(user));
-    const [registerFinished, setRegisterFinished] = useState(true);
-    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const location = useLocation();
     const { urlsUnavailable } = useSelector(state=>state.configState.config);
@@ -71,9 +68,6 @@ export default function Layout(){
 
     const logout = ()=>{
         dispatch({type: 'LOGOUT'});
-        setTimeout(()=>{
-            navigate('/login');
-        }, 500);
     }
 
     useEffect(()=>{
@@ -83,6 +77,11 @@ export default function Layout(){
     useEffect(()=>{
         if(socket && !urlsUnavailable.find(urlUnavailable=>new RegExp(`^${urlUnavailable}(/[a-z0-9-])*$`).test(window.location.pathname))){
             socket.removeAllListeners();
+
+            dispatch({
+                type: "IS_LOADING_IN_ROOM",
+                payload: true
+            });
 
             socket.emit('room:in', window.location.pathname, data=>{
                 dispatch({
@@ -111,10 +110,17 @@ export default function Layout(){
                         })),
                         {
                             type: "USER_JOIN_ROOM",
-                            user,
+                            user: user || {
+                                nickname
+                            },
                             roomURL: data.url
                         }
                     ]
+                });
+
+                dispatch({
+                    type: "IS_LOADING_IN_ROOM",
+                    payload: false
                 });
             });
 
@@ -161,13 +167,9 @@ export default function Layout(){
     }, [socket, window.location.pathname]);
 
     useEffect(()=>{
-        setIsLogged(Boolean(user));
-
-        setRegisterFinished(user?.name && user?.email && user?.nickname && user?.dateOfBirth);
-
-        if(user?.nickname){
+        if(nickname){
             setSearchParams({
-                nickname: user?.nickname
+                nickname
             });
         }
     }, [user]);
@@ -175,16 +177,13 @@ export default function Layout(){
     return (
         <WrapperLayout className={ (active ? "active" : "") }>
             <HeaderResponsive active={ active } />
-            {
-                !isLogged ? <Navigate replace to={ "/login" } /> : false
-            }
             <div className="navigation">
                 <ul>
                     <li className="logo">
                         <img src={ !active ? Logo : LogoResponsive } />
                     </li>
-                    <Link to={ `${lastRoomSelected?.url}?nickname=${user?.nickname}` }>
-                        <li className={ "" + ("/meu-perfil" !== location.pathname ? "active" : "") }>
+                    <Link to={ `${lastRoomSelected?.url}?nickname=${nickname}` }>
+                        <li className={ ("/meu-perfil" !== location.pathname ? "active" : "") }>
                             <div className="icon">
                                 <FontAwesomeIcon icon={ faMessage } />
                             </div>
@@ -194,27 +193,44 @@ export default function Layout(){
                     <li className="hr">
                         <hr/>
                     </li>
-                    <Link to={`/meu-perfil?nickname=${user?.nickname}`}>
-                        <li className={ "" + ("/meu-perfil" === location.pathname ? "active" : "") }>
-                            <div className="icon">
-                                <FontAwesomeIcon icon={ faUser } />
-                            </div>
-                            <p>Minha conta</p>
-                            {
-                                registerFinished ? null : (
-                                    <div className="icon alert">
-                                        <FontAwesomeIcon icon={faCircleExclamation} />
+                    {
+                        isLogged ? (
+                            <Link to={`/meu-perfil?nickname=${nickname}`}>
+                                <li className={ ("/meu-perfil" === location.pathname ? "active" : "") }>
+                                    <div className="icon">
+                                        <FontAwesomeIcon icon={ faUser } />
                                     </div>
-                                )
-                            }
-                        </li>
-                    </Link>
-                    <li onClick={logout}>
-                        <div className="icon">
-                            <FontAwesomeIcon icon={ faRightFromBracket } />
-                        </div>
-                        <p>Sair</p>
-                    </li>
+                                    <p>Minha conta</p>
+                                    {
+                                        registerFinished ? null : (
+                                            <div className="icon alert">
+                                                <FontAwesomeIcon icon={faCircleExclamation} />
+                                            </div>
+                                        )
+                                    }
+                                </li>
+                            </Link>
+                        ) : null
+                    }
+                    {
+                        isLogged ? (
+                            <li onClick={logout}>
+                                <div className="icon">
+                                    <FontAwesomeIcon icon={ faRightFromBracket } />
+                                </div>
+                                <p>Sair</p>
+                            </li>
+                        ) : (
+                            <Link to={`/login`}>
+                                <li className={ ("/login" === location.pathname ? "active" : "") }>
+                                    <div className="icon">
+                                        <FontAwesomeIcon icon={ faRightToBracket } />
+                                    </div>
+                                    <p>Login</p>
+                                </li>
+                            </Link>
+                        )
+                    }
                 </ul>
             </div>
             <div className="main">
@@ -227,11 +243,23 @@ export default function Layout(){
                 </header>
                 <div>
                     {
-                        registerFinished ? null : (
+
+                    }
+                    {
+                        isLogged ? (
+                            registerFinished ? null : (
+                                <Card className="warning-message">
+                                    <Card.Body>
+                                        <FontAwesomeIcon className="warning" icon={faCircleExclamation} />
+                                        <span>Para enviar mensagem pelo chat complete o seu cadastro.</span>
+                                    </Card.Body>
+                                </Card>
+                            )
+                        ) : (
                             <Card className="warning-message">
                                 <Card.Body>
                                     <FontAwesomeIcon className="warning" icon={faCircleExclamation} />
-                                    <span>Para enviar mensagem pelo chat complete o seu cadastro.</span>
+                                    <span>Para enviar mensagem pelo chat faça login.</span>
                                 </Card.Body>
                             </Card>
                         )

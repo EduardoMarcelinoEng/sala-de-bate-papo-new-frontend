@@ -18,7 +18,7 @@ export default {
             });
         },
         update({ name, email, dateOfBirth }){
-            return axios.put(`${config.host}/user/${store.getState().userState.user.nickname}`, {
+            return axios.put(`${config.host}/user/${store.getState().userState.nickname}`, {
                 name, email, dateOfBirth
             });
         }
@@ -41,7 +41,7 @@ export default {
                 url
             }, {
                 headers: {
-                    auth: store.getState().userState.user.nickname
+                    auth: store.getState().userState.nickname
                 }
             });
         },
@@ -50,7 +50,7 @@ export default {
                 url
             }, {
                 headers: {
-                    auth: store.getState().userState.user.nickname
+                    auth: store.getState().userState.nickname
                 }
             });
         }
