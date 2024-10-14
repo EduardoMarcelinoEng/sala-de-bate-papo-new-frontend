@@ -31,7 +31,7 @@ function HeaderResponsive({ logout }){
     return (
         <Navbar id="header-responsive" expand="xxl">
             <Navbar.Brand style={{margin: '0 50px'}}>
-                <Image src={ Logo } style={{width: '60px'}} fluid />
+                <Image src={ LogoResponsive } style={{width: '60px'}} fluid />
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="navbarScroll" />
             <Navbar.Collapse id="navbarScroll">

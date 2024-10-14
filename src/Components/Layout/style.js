@@ -162,6 +162,11 @@ const WrapperLayout = styled.div`
     #header-responsive {
         text-transform: uppercase;
         background-color: var(--color-main);
+        padding: 0;
+
+        img {
+            width: 50px !important;
+        }
 
         button {
             color: var(--color-font) !important;
