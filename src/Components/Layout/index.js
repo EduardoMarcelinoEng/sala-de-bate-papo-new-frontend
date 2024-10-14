@@ -17,17 +17,15 @@ import { useLocation, useParams, useSearchParams } from "react-router-dom";
 
 import {
     Link,
-    Outlet,
-    useNavigate,
-    Navigate
+    Outlet
 } from "react-router-dom";
 
 import { useSelector, useDispatch } from 'react-redux';
-import utils from "../../utils";
 
 function HeaderResponsive(){
     const dispatch = useDispatch();
-    const { roomName } = useParams();
+    const { isLogged, lastRoomSelected, nickname } = useSelector(state=>state.userState);
+    const location = useLocation();
 
     return (
         <Navbar id="header-responsive" expand="xxl">
@@ -41,13 +39,27 @@ function HeaderResponsive(){
                 navbarScroll
                 >
                     <Navbar>
-                        <Link to={ `/${roomName}` }>Chat</Link>
+                        <Link to={ `${lastRoomSelected?.url}?nickname=${nickname}` }>Chat</Link>
                     </Navbar>
+                    {
+                        isLogged ? (
+                            <Navbar>
+                                <Link to={ "/meu-perfil" }>Meu perfil</Link>
+                            </Navbar>
+                        ) : null
+                    }             
                     <Navbar>
-                        <Link to={ "/meu-perfil" }>Meu perfil</Link>
-                    </Navbar>
-                    <Navbar>
-                        <Button onClick={()=>dispatch({type: 'LOGOUT'})} variant='link'>Sair</Button>
+                        {
+                            isLogged ? (
+                                <Button onClick={()=>dispatch({type: 'LOGOUT'})} variant='link'>Sair</Button>
+                            ) : (
+                                <Link to={`/login`}>
+                                    <li className={ ("/login" === location.pathname ? "active" : "") }>
+                                        <p>Login</p>
+                                    </li>
+                                </Link>
+                            )
+                        }
                     </Navbar>
                 </Nav>
             </Navbar.Collapse>
@@ -242,9 +254,6 @@ export default function Layout(){
                     />
                 </header>
                 <div>
-                    {
-
-                    }
                     {
                         isLogged ? (
                             registerFinished ? null : (
