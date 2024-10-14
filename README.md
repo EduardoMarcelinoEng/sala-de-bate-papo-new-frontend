@@ -1,4 +1,4 @@
-# 1 - Execução do backend
+# 1 - Execução do frontend
 -Executar primeiro instruções para configuração do backend;
 -Executar na raiz do projeto backend o comando `yarn install`, sem as aspas;
 -Executar `yarn start` para iniciar o backend.
