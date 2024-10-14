@@ -11,9 +11,26 @@ export default function PreConfig({ children }){
     const verifyAndCreateUser = async ({ urlsUnavailable }) => {
         
         const searchParams = new URLSearchParams(window.location.search);
+        const nickname = searchParams.get("nickname") || userState.user?.nickname || userState.nickname;
+
+        if(window.location.pathname !== "/login"){
+            if(!nickname) window.location.href = "/login";
+            let user = null;
+
+            await http.user.findOne(nickname)
+            .then(async resultFindUser=>{
+                user = resultFindUser.data;
+            })
+            .catch(error=>utils.createNotification({
+                type: 'error',
+                title: 'Falha ao buscar usuário',
+                message: error.response.data
+            }));
+
+            if(!user) window.location.href = "/login";
+        }
 
         if(utils.pageCurrentIsChat(urlsUnavailable)){
-            const nickname = searchParams.get("nickname") || userState.user?.nickname || userState.nickname;
 
             if(nickname){
 

@@ -21,16 +21,6 @@ function DisconnectSocketIfNotChat({ children }){
     const location = useLocation();
     const dispatch = useDispatch();
 
-    useEffect(()=>{
-        if(socket && !utils.pageCurrentIsChat(urlsUnavailable)){
-            socket.disconnect();
-            dispatch({
-                type: "CONNECT_SOCKET",
-                payload: null
-            });
-        }
-    }, [location.pathname]);
-
     return (
         children
     );
